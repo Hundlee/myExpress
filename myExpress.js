@@ -3,6 +3,11 @@ const http = require("http");
 function myExpress() {
     const app = {};
     const routes = [];
+    const middlewares = [];
+
+    app.use = (middleware) => {
+        middlewares.push(middleware);
+    };
 
     app.get = (path, handler) => {
         routes.push({ path, method: "GET", handler });
@@ -14,17 +19,29 @@ function myExpress() {
 
     app.listen = (port, callback) => {
         const server = http.createServer((req, res) => {
-            const route = routes.find(
-                (route) => req.url === route.path && req.method === route.method
-            );
+            let i = 0;
+            function next() {
+                const middleware = middlewares[i++];
+                if (middleware) {
+                    middleware(req, res, next);
+                    return;
+                }
 
-            if (route) {
-                route.handler(req, res);
-                return;
+                const route = routes.find(
+                    (route) =>
+                        req.url === route.path && req.method === route.method
+                );
+
+                if (route) {
+                    route.handler(req, res);
+                    return;
+                }
+
+                res.statusCode = 404;
+                res.end("Not Found");
             }
 
-            res.statusCode = 404;
-            res.end("Not Found");
+            next();
         });
 
         server.listen(port, callback);
