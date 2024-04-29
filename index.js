@@ -1,8 +1,10 @@
 const http = require("http");
 
+const data = [1, 2, 3];
+
 const server = http.createServer((req, res) => {
     if (req.url === "/api/data" && req.method === "GET") {
-        res.end(JSON.stringify({ data: [1, 2, 3] }));
+        res.end(JSON.stringify({ data }));
         return;
     }
 
